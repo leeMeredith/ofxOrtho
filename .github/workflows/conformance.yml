@@ -1,0 +1,42 @@
+name: conformance
+
+# Proves ofxOrtho produces byte-identical output to the JavaScript reference
+# for the same seed and dials. Runs on plain cc/c++ with no openFrameworks:
+# building GLFW proves nothing about language conformance.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  conformance:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check out ofxOrtho
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          path: ofxOrtho
+
+      # The harness diffs against the reference repo's golden vectors and
+      # expects it as a sibling directory.
+      - name: Check out the ortho reference
+        uses: actions/checkout@v4
+        with:
+          repository: leeMeredith/ortho
+          path: ortho
+
+      - name: Verify the kernel submodule is present
+        working-directory: ofxOrtho
+        run: test -f libs/ortho-kernel/src/ortho.c
+
+      - name: Run conformance
+        working-directory: ofxOrtho
+        run: ./tests/conformance.sh ../ortho

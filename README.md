@@ -1,5 +1,7 @@
 # ofxOrtho
 
+[![conformance](https://github.com/leeMeredith/ofxOrtho/actions/workflows/conformance.yml/badge.svg)](https://github.com/leeMeredith/ofxOrtho/actions/workflows/conformance.yml)
+
 openFrameworks addon for **ortho**, an invented-language generator — pseudo-words
 in the uncanny valley between legible text and noise.
 
