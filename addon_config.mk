@@ -3,8 +3,7 @@
 # The kernel (libs/ortho-kernel) is plain C99; the wrapper (src) is C++.
 # Both source trees are compiled, and both include dirs are exposed.
 #
-# If the kernel submodule is empty, run:
-#     git submodule update --init --recursive
+# The kernel is vendored (not a submodule) — see libs/ortho-kernel/VENDORED.md
 
 meta:
 	ADDON_NAME = ofxOrtho
@@ -24,5 +23,7 @@ common:
 	# Keep the tests/ and example/ trees out of the addon build.
 	ADDON_SOURCES_EXCLUDE  = tests/%
 	ADDON_SOURCES_EXCLUDE += example-basic/%
+	ADDON_SOURCES_EXCLUDE += libs/ortho-kernel/tests/%
 	ADDON_INCLUDES_EXCLUDE = tests/%
 	ADDON_INCLUDES_EXCLUDE += example-basic/%
+	ADDON_INCLUDES_EXCLUDE += libs/ortho-kernel/tests/%

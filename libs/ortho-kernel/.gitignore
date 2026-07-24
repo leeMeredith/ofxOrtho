@@ -1,0 +1,10 @@
+build/
+*.o
+*.a
+*.dSYM/
+
+# OS / editor cruft
+.DS_Store
+*.swp
+.vscode/
+.idea/
