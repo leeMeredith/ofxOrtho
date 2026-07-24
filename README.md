@@ -16,6 +16,11 @@ Same seed → same language, on every host and every run.
 > get an empty `libs/ortho-kernel/` and the addon will not build. Clone with
 > `--recursive` instead; see Install below.
 
+![ofxOrtho example](docs/screenshot.png)
+
+*Tokens coloured by origin: names, topics, and recurring phrases are
+distinguishable from fresh coinages, on both the neutral and readable paths.*
+
 ## Install
 
 ```
