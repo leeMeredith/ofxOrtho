@@ -27,7 +27,15 @@ void ofApp::setup()
 
 void ofApp::regenerate()
 {
-    page = ortho.tokensWithSource(220, 9);
+    /* Two separate calls into the kernel. Nothing is combined: the neutral
+     * path stays neutral, the readable path stays readable. */
+    page.clear();
+
+    if (mode == MODE_TOKENS) {
+        page = ortho.tokensWithSource(220, 9);
+    } else {
+        page = ortho.paragraphWithSource(numSentences, 22, 9);
+    }
 }
 
 ofColor ofApp::colorForSource(uint8_t source) const
@@ -44,59 +52,84 @@ ofColor ofApp::colorForSource(uint8_t source) const
 
 void ofApp::draw()
 {
-    const float left      = 40.0f;
-    const float right     = ofGetWidth() - 40.0f;
-    const float lineStep  = 26.0f;
-    const float spaceStep = 10.0f;
+    if (mode == MODE_TOKENS) drawTokens();
+    else                     drawProse();
 
-    float x = left;
-    float y = 110.0f;
+    /* header */
+    ofSetColor(255);
+    ofDrawBitmapString("ofxOrtho  |  seed " + ofToString(seed) + "  |  " +
+                       (mode == MODE_TOKENS ? "tokens (neutral, unpunctuated)"
+                                            : "paragraph (readable)"),
+                       40, 40);
+    ofSetColor(150);
+    ofDrawBitmapString("TAB switch surface   SPACE new seed   N new section   "
+                       "R regenerate   UP/DOWN preset   1 bare",
+                       40, 60);
+
+    {
+        ofSetColor(colorForSource(ORTHO_SRC_FRESH));
+        ofDrawBitmapString("fresh", 40, 80);
+        ofSetColor(colorForSource(ORTHO_SRC_FUNCTION));
+        ofDrawBitmapString("function", 110, 80);
+        ofSetColor(colorForSource(ORTHO_SRC_TOPIC));
+        ofDrawBitmapString("topic", 210, 80);
+        ofSetColor(colorForSource(ORTHO_SRC_NAME));
+        ofDrawBitmapString("name", 280, 80);
+        ofSetColor(colorForSource(ORTHO_SRC_PHRASE));
+        ofDrawBitmapString("phrase", 350, 80);
+    }
+}
+
+/* Neutral path: origin-bearing, so colour by source. Never punctuated. */
+void ofApp::drawTokens()
+{
+    const float left  = 40.0f;
+    const float right = ofGetWidth() - 40.0f;
+    float x = left, y = 110.0f;
 
     for (size_t i = 0; i < page.size(); ++i) {
         const std::string &w = page[i].text;
-
-        /* Rough advance: bitmap glyphs are 8px wide. Enough for a demo; use
-         * ofTrueTypeFont::stringWidth() for real typesetting. */
         float advance = w.size() * 8.0f;
 
-        if (x + advance > right) {
-            x  = left;
-            y += lineStep;
-        }
+        if (x + advance > right) { x = left; y += 26.0f; }
         if (y > ofGetHeight() - 30.0f) break;
 
         ofSetColor(colorForSource(page[i].source));
         ofDrawBitmapString(w, x, y);
-
-        x += advance + spaceStep;
+        x += advance + 10.0f;
     }
+}
 
-    /* header */
-    ofSetColor(255);
-    ofDrawBitmapString("ofxOrtho  |  seed " + ofToString(seed), left, 40);
-    ofSetColor(150);
-    ofDrawBitmapString("SPACE new seed   N new section   R regenerate   "
-                       "UP/DOWN preset   1 bare",
-                       left, 60);
+/* Readable path: punctuation is baked into the token characters by the
+ * kernel post-pass, so nothing special is needed here - just draw them. */
+void ofApp::drawProse()
+{
+    const float left  = 40.0f;
+    const float right = ofGetWidth() - 40.0f;
+    float x = left, y = 110.0f;
 
-    /* legend */
-    ofSetColor(colorForSource(ORTHO_SRC_FRESH));
-    ofDrawBitmapString("fresh", left, 80);
-    ofSetColor(colorForSource(ORTHO_SRC_FUNCTION));
-    ofDrawBitmapString("function", left + 70, 80);
-    ofSetColor(colorForSource(ORTHO_SRC_TOPIC));
-    ofDrawBitmapString("topic", left + 170, 80);
-    ofSetColor(colorForSource(ORTHO_SRC_NAME));
-    ofDrawBitmapString("name", left + 240, 80);
-    ofSetColor(colorForSource(ORTHO_SRC_PHRASE));
-    ofDrawBitmapString("phrase", left + 310, 80);
+    for (size_t i = 0; i < page.size(); ++i) {
+        const std::string &w = page[i].text;
+        float advance = w.size() * 8.0f;
+
+        if (x + advance > right) { x = left; y += 26.0f; }
+        if (y > ofGetHeight() - 30.0f) break;
+
+        ofSetColor(colorForSource(page[i].source));
+        ofDrawBitmapString(w, x, y);
+        x += advance + 10.0f;
+    }
 }
 
 void ofApp::keyPressed(int key)
 {
-    static double preset = 0.5;
-
     switch (key) {
+        case OF_KEY_TAB:
+            /* Switch which kernel surface is drawn. */
+            mode = (mode == MODE_TOKENS) ? MODE_PARAGRAPH : MODE_TOKENS;
+            regenerate();
+            break;
+
         case ' ':
             /* A new seed is a new language. Keep the number and you can
              * always return to this exact language later. */
@@ -119,19 +152,33 @@ void ofApp::keyPressed(int key)
 
         case OF_KEY_UP:
             preset = std::min(1.0, preset + 0.1);
+            bare = false;
             ortho.setPreset(preset);
             regenerate();
             break;
 
         case OF_KEY_DOWN:
             preset = std::max(0.0, preset - 0.1);
+            bare = false;
             ortho.setPreset(preset);
             regenerate();
             break;
 
         case '1':
-            preset = 0.0;
-            ortho.clearDials();
+            /* Toggle, not a one-way door: restores the preset on second press. */
+            bare = !bare;
+            if (bare) ortho.clearDials();
+            else      ortho.setPreset(preset);
+            regenerate();
+            break;
+
+        case '[':
+            if (numSentences > 2) numSentences -= 2;
+            regenerate();
+            break;
+
+        case ']':
+            if (numSentences < 60) numSentences += 2;
             regenerate();
             break;
 

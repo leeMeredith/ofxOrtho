@@ -174,6 +174,47 @@ std::vector<std::string> ofxOrtho::paragraph(int numSentences, int maxWords,
     return out;
 }
 
+std::vector<ofxOrtho::Token> ofxOrtho::sentenceWithSource(int numWords,
+                                                          int maxLetters)
+{
+    std::vector<Token> out;
+    if (!started || numWords <= 0) return out;
+
+    std::vector<ortho_token> buf(kScratchCap);
+    int wrote = ortho_sentence(&engine, numWords, maxLetters,
+                               buf.data(), buf.size());
+
+    out.reserve(static_cast<size_t>(wrote));
+    for (int i = 0; i < wrote; ++i) {
+        Token t;
+        t.text   = buf[i].text;
+        t.source = buf[i].source;
+        out.push_back(t);
+    }
+    return out;
+}
+
+std::vector<ofxOrtho::Token> ofxOrtho::paragraphWithSource(int numSentences,
+                                                           int maxWords,
+                                                           int maxLetters)
+{
+    std::vector<Token> out;
+    if (!started || numSentences <= 0) return out;
+
+    std::vector<ortho_token> buf(kScratchCap);
+    int wrote = ortho_paragraph(&engine, numSentences, maxWords, maxLetters,
+                                buf.data(), buf.size());
+
+    out.reserve(static_cast<size_t>(wrote));
+    for (int i = 0; i < wrote; ++i) {
+        Token t;
+        t.text   = buf[i].text;
+        t.source = buf[i].source;
+        out.push_back(t);
+    }
+    return out;
+}
+
 std::string ofxOrtho::word(int numLetters, bool allowContractions)
 {
     if (!started) return std::string();

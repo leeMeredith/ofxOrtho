@@ -75,6 +75,14 @@ public:
     std::vector<std::string> paragraph(int numSentences, int maxWords = 12,
                                        int maxLetters = 8);
 
+    /* Readable path, origin-bearing. The kernel already populates .source on
+     * every token it writes, including on this path - these simply stop
+     * discarding it. Punctuation is baked into .text by the kernel post-pass;
+     * .source is untouched by that pass. Nothing is inferred here. */
+    std::vector<Token> sentenceWithSource(int numWords, int maxLetters = 8);
+    std::vector<Token> paragraphWithSource(int numSentences, int maxWords = 12,
+                                           int maxLetters = 8);
+
     /* One word. */
     std::string word(int numLetters, bool allowContractions = true);
 
