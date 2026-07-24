@@ -19,6 +19,16 @@
 
 #pragma once
 
+/* The language engine lives in a git submodule at libs/ortho-kernel. GitHub's
+ * "Download ZIP" does not include submodule contents, so a ZIP download gets
+ * an empty directory and an otherwise baffling missing-header error. Catch it
+ * here with something actionable instead. */
+#if defined(__has_include)
+#  if !__has_include("ortho.h")
+#    error "ofxOrtho: ortho-kernel is missing. If you downloaded a ZIP, submodules are NOT included - clone instead: git clone --recursive https://github.com/leeMeredith/ofxOrtho.git   Already cloned? Run: git submodule update --init --recursive"
+#  endif
+#endif
+
 #include "ortho.h"
 
 #include <cstdint>

@@ -1,5 +1,5 @@
 build/
 *.o
 .DS_Store
-example/bin/
-example/obj/
+example-basic/bin/
+example-basic/obj/

@@ -23,6 +23,6 @@ common:
 
 	# Keep the tests/ and example/ trees out of the addon build.
 	ADDON_SOURCES_EXCLUDE  = tests/%
-	ADDON_SOURCES_EXCLUDE += example/%
+	ADDON_SOURCES_EXCLUDE += example-basic/%
 	ADDON_INCLUDES_EXCLUDE = tests/%
-	ADDON_INCLUDES_EXCLUDE += example/%
+	ADDON_INCLUDES_EXCLUDE += example-basic/%

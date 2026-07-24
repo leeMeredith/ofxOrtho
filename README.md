@@ -11,6 +11,11 @@ almost catching the subject. That "almost" is the point.
 
 Same seed → same language, on every host and every run.
 
+> **Do not use GitHub's "Download ZIP".** The language engine is a git
+> submodule, and ZIP downloads do not include submodule contents — you would
+> get an empty `libs/ortho-kernel/` and the addon will not build. Clone with
+> `--recursive` instead; see Install below.
+
 ## Install
 
 ```
