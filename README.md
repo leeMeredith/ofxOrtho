@@ -148,10 +148,36 @@ reference repo as a sibling directory.
 When the spec and an implementation disagree, the spec wins and the
 implementation is a bug.
 
-## Tested with
+## Platforms
 
-openFrameworks 0.12.1, macOS (Apple Silicon), Xcode clang. C++11 or later.
+**Tested:** openFrameworks 0.12.1 on macOS (Apple Silicon), Xcode clang.
+C++11 or later.
+
+**Untested but expected to work:** Linux, Windows, iOS, and other oF targets.
+There is nothing platform-specific in this addon - the kernel is plain C99 with
+zero dependencies and zero allocation, and the wrapper uses only the C++
+standard library. No OS APIs, no threads, no file I/O, no third-party libraries.
+
+If you build it somewhere I haven't, I'd welcome an issue or PR either way. The
+conformance harness is the useful thing to run first, since it compiles with
+plain cc/c++ and needs no openFrameworks. If it reports 7/7 on your platform,
+the language layer is sound there and any remaining problem is in the oF build,
+not the engine.
+
+## Credit and licensing
+
+Every part of the stack is MIT, and all of it is my own work:
+
+- `ofxOrtho` (this addon) — MIT
+- [`ortho-kernel`](https://github.com/leeMeredith/ortho-kernel) — the bundled C
+  engine, included here as a git submodule — MIT
+- [`ortho`](https://github.com/leeMeredith/ortho) — the JavaScript reference and
+  spec the above conform to — MIT
+
+The addon has no third-party dependencies. The kernel is plain C99 with zero
+dependencies and zero allocation; the wrapper adds only the C++ standard
+library. Nothing beyond openFrameworks itself is pulled in.
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).
