@@ -22,7 +22,6 @@ jobs:
       - name: Check out ofxOrtho
         uses: actions/checkout@v4
         with:
-          submodules: recursive
           path: ofxOrtho
 
       # The harness diffs against the reference repo's golden vectors and
@@ -33,7 +32,9 @@ jobs:
           repository: leeMeredith/ortho
           path: ortho
 
-      - name: Verify the kernel submodule is present
+      # The kernel is vendored, not a submodule — this guards against a
+      # bad vendor update silently emptying the directory.
+      - name: Verify the vendored kernel is present
         working-directory: ofxOrtho
         run: test -f libs/ortho-kernel/src/ortho.c
 

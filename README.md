@@ -13,11 +13,6 @@ almost catching the subject. That "almost" is the point.
 
 Same seed → same language, on every host and every run.
 
-> **Do not use GitHub's "Download ZIP".** The language engine is a git
-> submodule, and ZIP downloads do not include submodule contents — you would
-> get an empty `libs/ortho-kernel/` and the addon will not build. Clone with
-> `--recursive` instead; see Install below.
-
 ![ofxOrtho example](docs/screenshot.png)
 
 *Tokens coloured by origin: names, topics, and recurring phrases are
@@ -27,15 +22,11 @@ distinguishable from fresh coinages, on both the neutral and readable paths.*
 
 ```
 cd openFrameworks/addons
-git clone --recursive https://github.com/leeMeredith/ofxOrtho.git
+git clone https://github.com/leeMeredith/ofxOrtho.git
 ```
 
-The `--recursive` matters — the language engine is a submodule. If you
-already cloned without it:
-
-```
-cd ofxOrtho && git submodule update --init --recursive
-```
+Or use GitHub's *Download ZIP*. The language engine is vendored into
+`libs/ortho-kernel/`, so both routes work with no extra steps.
 
 Then generate a project with Project Generator and check **ofxOrtho**.
 
@@ -143,12 +134,13 @@ openFrameworks required, because building GLFW proves nothing about language
 conformance.
 
 Run it from the addon root, with the [`ortho`](https://github.com/leeMeredith/ortho)
-reference repo as a sibling directory.
+reference repo as a sibling directory. CI runs it on macOS and Linux on every
+push — that is what the badge above reports.
 
 ## The constellation
 
 - [`ortho`](https://github.com/leeMeredith/ortho) — JavaScript reference, `SPEC.md`, golden vectors. **The authority.**
-- [`ortho-kernel`](https://github.com/leeMeredith/ortho-kernel) — the shared host-neutral C engine
+- [`ortho-kernel`](https://github.com/leeMeredith/ortho-kernel) — the shared host-neutral C engine, vendored here at commit `2ba6491` (see [`libs/ortho-kernel/VENDORED.md`](libs/ortho-kernel/VENDORED.md))
 - `ofxOrtho` (this repo) — openFrameworks addon
 - `ortho-max` — Max/MSP external
 
@@ -177,7 +169,7 @@ Every part of the stack is MIT, and all of it is my own work:
 
 - `ofxOrtho` (this addon) — MIT
 - [`ortho-kernel`](https://github.com/leeMeredith/ortho-kernel) — the bundled C
-  engine, included here as a git submodule — MIT
+  engine, vendored into `libs/ortho-kernel/` — MIT
 - [`ortho`](https://github.com/leeMeredith/ortho) — the JavaScript reference and
   spec the above conform to — MIT
 
