@@ -167,6 +167,46 @@ void ortho_set_dials(ortho_t *o, const ortho_dials *dials)
  * Word generation (SPEC.md §5.1) — draw order is normative
  * ------------------------------------------------------------------------*/
 
+/* SPEC 2.0 §5.1 step 8 — cluster guard.
+ *
+ * A filter over the finished word, not a decision: consumes no PRNG draws, so
+ * it cannot shift the stream. Drops a character when either holds:
+ *   - it would be the third consecutive occurrence of the same letter
+ *   - it is a consonant identical to the one before it, with at least two
+ *     consonants already in the run
+ *
+ * Trigraphs (three DISTINCT consonants) are deliberately untouched — they are
+ * how a seed's own tables reach the page. Apostrophes are transparent: neither
+ * vowel nor consonant, and they do not reset the run.
+ */
+static int is_vowel_ch(char c)
+{
+    return c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u' || c == 'y';
+}
+
+static void cluster_guard(char *w)
+{
+    char tmp[ORTHO_MAX_TOKEN];
+    int  i, n = 0, cons = 0;
+    int  len = (int)strlen(w);
+
+    for (i = 0; i < len && n < ORTHO_MAX_TOKEN - 1; i++) {
+        char ch = w[i];
+
+        if (n >= 2 && ch == tmp[n - 1] && ch == tmp[n - 2]) continue;
+
+        if (ch != '\'' && !is_vowel_ch(ch)) {
+            if (cons >= 2 && n > 0 && ch == tmp[n - 1]) continue;
+            cons++;
+        } else if (ch != '\'') {
+            cons = 0;
+        }
+        tmp[n++] = ch;
+    }
+    tmp[n] = '\0';
+    strcpy(w, tmp);
+}
+
 int ortho_word(ortho_t *o, int num_letters, int allow_contractions, char *out)
 {
     ortho_prng *r = &o->rng;
@@ -238,7 +278,7 @@ int ortho_word(ortho_t *o, int num_letters, int allow_contractions, char *out)
         /* --- digraph / trigraph injection --- */
         if (ortho_prng_below(r, 2) == 0) {
             int len = (int)strlen(out);
-            if (len > 9) {
+            if (len > 7) {
                 const char *tri =
                     o->consonant_trigraphs[ortho_prng_below(r, ORTHO_N_CONSONANT_TRIGRAPHS)];
                 if (mode == 0 || mode == 1) {
@@ -248,7 +288,7 @@ int ortho_word(ortho_t *o, int num_letters, int allow_contractions, char *out)
                 }
             }
             len = (int)strlen(out);
-            if (len > 5 && len < 8) {
+            if (len > 2 && len < 8) {
                 const char *di =
                     o->consonant_digraphs[ortho_prng_below(r, ORTHO_N_CONSONANT_DIGRAPHS)];
                 if (mode == 0 || mode == 1) {
@@ -273,6 +313,7 @@ int ortho_word(ortho_t *o, int num_letters, int allow_contractions, char *out)
         str_insert_at(out, add, 1);
     }
 
+    cluster_guard(out);
     return (int)strlen(out);
 }
 
@@ -680,8 +721,11 @@ int ortho_paragraph(ortho_t *o, int num_sentences, int max_words,
 
     for (i = 0; i < s; i++) {
         int nw = ortho_prng_below(&o->rng, max_words);
-        int ml = ortho_prng_below(&o->rng, max_letters);
-        written += ortho_sentence(o, nw, ml,
+        /* SPEC 2.0 §9: max_words is drawn below, max_letters is passed
+         * through. ortho_sentence already draws each word's length below its
+         * argument; reducing twice put paragraph words under the digraph band
+         * in §5.1 step 5, so they carried nothing seed-specific. */
+        written += ortho_sentence(o, nw, max_letters,
                                   buf + written,
                                   (capacity > (size_t)written)
                                       ? capacity - (size_t)written : 0);

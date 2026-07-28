@@ -1,7 +1,8 @@
 # ortho-kernel
 
 The shared C kernel for **ortho**, an invented-language generator — pseudo-words
-in the uncanny valley between legible text and noise.
+that hold the shape and internal consistency of a language without belonging to
+any existing one.
 
 This repo holds the language engine as plain C99. It is consumed as a git
 submodule by the native hosts:
@@ -60,8 +61,8 @@ appear as JS options, Max attributes, and oF setters.
 |---|---|
 | `phrases` | multi-word phrase recurrence, phrase-first and atomic |
 | `function_words` | grammar-glue recurrence, document scope |
-| `topics` | the phony *what* recurring, section scope |
-| `names` | the phony *who* recurring, section scope |
+| `topics` | the section's subject recurring, section scope |
+| `names` | the section's identities recurring, section scope |
 | `commas` | narrative pacing, function-word-anchored |
 | `quotation` | direct-speech span, speaker-anchored to a cast name |
 | `scare_quotes` | a single term held at arm's length |
@@ -79,8 +80,8 @@ Every token reports why it appeared:
 ```c
 ORTHO_SRC_FRESH     /* 0 — freshly generated */
 ORTHO_SRC_FUNCTION  /* 1 — document-scope function word */
-ORTHO_SRC_TOPIC     /* 2 — section-scope topic (the phony WHAT) */
-ORTHO_SRC_NAME      /* 3 — section-scope name (the phony WHO) */
+ORTHO_SRC_TOPIC     /* 2 — section-scope topic (the section's subject) */
+ORTHO_SRC_NAME      /* 3 — section-scope name (the section's identities) */
 ORTHO_SRC_PHRASE    /* 4 — member of a recurring phrase */
 ```
 
@@ -119,7 +120,7 @@ PASS  seed_4294967295_bare
 PASS  seed_42_preset50
 PASS  seed_12345_preset50
 
-CONFORMANT — 7/7 vectors, spec 1.1, vectors v2
+CONFORMANT — 7/7 vectors, spec 2.0, vectors v3
 ```
 
 The bare vectors prove the all-dials-zero baseline; the preset vectors exercise

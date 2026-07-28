@@ -1,8 +1,9 @@
 # Vendored: ortho-kernel
 
 Source:  https://github.com/leeMeredith/ortho-kernel
-Commit:  2ba6491a8a56fb50ade42a4debb713fa42638fce
-Date:    2026-07-23
+Commit:  86449178ef889df000761d5988d3f0a092f928b0
+Date:    2026-07-27
+Spec:    2.0 · vectors v3
 License: MIT
 
 This is a vendored copy, not a submodule — so that ZIP downloads and the

@@ -13,7 +13,7 @@
 
 set -u
 REF="${1:-../ortho}"
-VEC="$REF/test/vectors/v2"
+VEC="$REF/test/vectors/v3"
 KERNEL="libs/ortho-kernel"
 
 if [ ! -d "$VEC" ]; then
@@ -62,7 +62,7 @@ done
 
 echo
 if [ "$fail" -eq 0 ]; then
-  echo "CONFORMANT — $pass/$pass vectors, spec 1.1, vectors v2"
+  echo "CONFORMANT — $pass/$pass vectors, spec 2.0, vectors v3"
   exit 0
 else
   echo "$fail FAILURE(S) — $pass passed"

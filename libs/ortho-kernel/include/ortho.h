@@ -67,8 +67,8 @@ extern "C" {
 typedef enum {
     ORTHO_SRC_FRESH    = 0,  /* freshly generated, not recurring */
     ORTHO_SRC_FUNCTION = 1,  /* document-scope function word (grammar glue) */
-    ORTHO_SRC_TOPIC    = 2,  /* section-scope topic word (the phony WHAT) */
-    ORTHO_SRC_NAME     = 3,  /* section-scope name (the phony WHO) */
+    ORTHO_SRC_TOPIC    = 2,  /* section-scope topic word: section's subject */
+    ORTHO_SRC_NAME     = 3,  /* section-scope name: section's identities   */
     ORTHO_SRC_PHRASE   = 4   /* member of a recurring multi-word phrase */
 } ortho_source;
 
@@ -92,8 +92,8 @@ typedef struct {
     /* recurrence family — affects all generation including tokens */
     double phrases;        /* multi-word phrase recurrence, atomic */
     double function_words; /* grammar-glue recurrence, document scope */
-    double topics;         /* the phony WHAT, section scope */
-    double names;          /* the phony WHO, section scope */
+    double topics;         /* the section's subject, section scope */
+    double names;          /* the section's identities, section scope */
     /* punctuation family — readable path ONLY, never touches tokens */
     double commas;         /* narrative pacing, function-word-anchored */
     double quotation;      /* direct-speech span, speaker-anchored */
