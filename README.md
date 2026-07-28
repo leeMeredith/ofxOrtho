@@ -78,24 +78,40 @@ ortho.setPreset(0.3);    // topics stays at 0.9
 
 With all seven at zero the engine reproduces the bare golden vectors exactly.
 
+### What makes one language differ from another
+
+Every seed draws its own phonology, not just its own vocabulary:
+
+- **A root shape.** `CVCV`, `CCVC`, `CVCC`, `CVV` and others. This is the shape
+  every word is built from, and it is what separates language families before
+  you consider which letters they use. A `CVCV` language has no consonant
+  clusters at all — like Hawaiian; a `CCVC` language is full of them.
+- **A phoneme inventory.** Between 6 and 20 consonants, 4 to 6 vowels. Hawaiian
+  works with 8 consonants, English with about 24. A language using a third of
+  the alphabet repeats those few sounds constantly, and that repetition is most
+  of what makes it recognisable.
+- **Letter frequencies.** Weighted per seed, and compensated against inventory
+  size so a small inventory does not collapse onto one letter.
+- **Its own clusters.** Consonant digraphs and trigraphs, and vowel digraphs for
+  the `CVV` shapes, all drawn from the language's own inventory.
+- **Punctuation.** A clause mark (`,` `;` `:` or an em dash), a quote pair
+  (`"` `«»` `‹›`), whether quoted speech is capitalised, and which terminal
+  marks it uses. The dials decide how often a mark appears; the seed decides
+  which mark it is.
+- **Compounding and particles.** Some languages join roots with a hyphen; all
+  have single-letter function words.
+
 ### Length arguments are ceilings, not targets
 
 `maxLetters` and `maxWords` cap a random draw rather than setting it. Word
 lengths vary below the value, which is deliberate — uniform lengths read as a
-list rather than as prose.
+list rather than as prose. Word length is rounded up to a whole number of roots,
+so a `CVCV` language produces 4- and 8-letter words rather than truncations.
 
-`paragraph()` compounds this. It draws a per-sentence ceiling below your
-`maxWords` and `maxLetters`, then `sentence()` draws each word below *that*. So
-paragraphs come out markedly shorter than `tokens()` at the same settings —
-around two or three letters per word at the default `maxLetters` of 8, short
-enough that different seeds start to resemble one another.
-
-If paragraphs read as too clipped, pass a much larger `maxLetters` — 20 or more
-is reasonable. `tokens()` draws once and shows a language's character most
-clearly.
-
-This is reference behaviour, reproduced faithfully by the kernel. It is not
-covered by the golden vectors, which exercise the token path only.
+Spec 1.x and 2.x had `paragraph()` draw below *both* arguments before calling
+`sentence()`, which reduced word length twice and left paragraphs at two or
+three letters. Fixed in 3.0: `maxWords` is drawn below, `maxLetters` is passed
+through.
 
 ### Sections
 
