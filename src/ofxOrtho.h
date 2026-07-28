@@ -19,13 +19,14 @@
 
 #pragma once
 
-/* The language engine lives in a git submodule at libs/ortho-kernel. GitHub's
- * "Download ZIP" does not include submodule contents, so a ZIP download gets
- * an empty directory and an otherwise baffling missing-header error. Catch it
- * here with something actionable instead. */
+/* The language engine is vendored at libs/ortho-kernel — a copy, not a
+ * submodule, so that ZIP downloads and the Project Generator both work with no
+ * extra steps. If the header is missing anyway, the addon folder is incomplete
+ * or the include path is wrong; say so instead of emitting a wall of
+ * unresolved types. */
 #if defined(__has_include)
 #  if !__has_include("ortho.h")
-#    error "ofxOrtho: ortho-kernel is missing. If you downloaded a ZIP, submodules are NOT included - clone instead: git clone --recursive https://github.com/leeMeredith/ofxOrtho.git   Already cloned? Run: git submodule update --init --recursive"
+#    error "ofxOrtho: ortho.h not found. libs/ortho-kernel/include should sit inside this addon - check that the folder copied completely, and that addon_config.mk is being picked up. Fresh copy: https://github.com/leeMeredith/ofxOrtho"
 #  endif
 #endif
 
