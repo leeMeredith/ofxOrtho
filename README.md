@@ -3,13 +3,13 @@
 [![conformance](https://github.com/leeMeredith/ofxOrtho/actions/workflows/conformance.yml/badge.svg)](https://github.com/leeMeredith/ofxOrtho/actions/workflows/conformance.yml)
 
 openFrameworks addon for **ortho**, an invented-language generator — pseudo-words
-in the uncanny valley between legible text and noise.
+that hold the shape and internal consistency of a language without belonging to
+any existing one.
 
 One instance mints a language substrate once from a seed (its own consonants,
 vowels, digraphs, trigraphs, contractions), then every word comes from that same
-invented tongue. Output reads as one internally consistent fake language rather
-than a fresh scramble. Names recur, phrases return, things get quoted — you keep
-almost catching the subject. That "almost" is the point.
+invented tongue. Output holds together as one language rather than a fresh
+scramble. Names recur, phrases return whole, things get quoted.
 
 Same seed → same language, on every host and every run.
 
@@ -47,9 +47,9 @@ animate names differently, spawn on NAME:
 ```cpp
 for (auto &t : ortho.tokensWithSource(100)) {
     switch (t.source) {
-        case ORTHO_SRC_NAME:   /* the phony WHO */   break;
-        case ORTHO_SRC_TOPIC:  /* the phony WHAT */  break;
-        case ORTHO_SRC_PHRASE: /* recurring phrase */ break;
+        case ORTHO_SRC_NAME:   /* section's identities */ break;
+        case ORTHO_SRC_TOPIC:  /* section's subject    */ break;
+        case ORTHO_SRC_PHRASE: /* recurring phrase     */ break;
     }
 }
 ```
@@ -63,8 +63,8 @@ appear as JS options, Max attributes, and oF setters.
 |---|---|
 | `setPhrases()` | multi-word phrase recurrence, atomic |
 | `setFunctionWords()` | grammar-glue recurrence, document scope |
-| `setTopics()` | the phony *what* recurring, section scope |
-| `setNames()` | the phony *who* recurring, section scope |
+| `setTopics()` | the section's subject recurring, section scope |
+| `setNames()` | the section's identities recurring, section scope |
 | `setCommas()` | narrative pacing (readable path only) |
 | `setQuotation()` | direct-speech span (readable path only) |
 | `setScareQuotes()` | a single term held at arm's length |
