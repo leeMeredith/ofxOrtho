@@ -112,6 +112,13 @@ private:
         DIAL_COUNT
     };
 
+    /* Generation scratch. A member rather than a local so nothing allocates
+     * per call — the kernel allocates nothing, and it would be a poor trade
+     * for the wrapper to undo that by constructing ~200 KB on every draw()
+     * frame. Sized once, reused forever. */
+    static const size_t kCapacity = 4096;
+    ortho_token scratch[kCapacity];
+
     ortho_t     engine;                 /* embedded by value — no allocation */
     ortho_dials dials;                  /* host-side dial state */
     bool        explicitSet[DIAL_COUNT];
@@ -124,4 +131,9 @@ private:
 
     /* Set one dial by index, mark it explicit, recompute. */
     void setDial(int which, double v);
+
+    /* Warn if a request exceeds the scratch buffer. The kernel silently writes
+     * what fits; saying so is the host's job, per HOSTS.md section 3. Returns
+     * the clamped count. */
+    int capRequest(int n, const char *what) const;
 };

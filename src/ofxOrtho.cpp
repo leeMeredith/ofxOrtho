@@ -9,6 +9,24 @@
 
 #include <cstring>
 
+/* Reporting goes through oF's logger when this is built as an addon, and to
+ * stderr when it is not. The conformance harness compiles this file with plain
+ * c++ and no openFrameworks — building GLFW proves nothing about language
+ * conformance — so ofLog.h cannot be a hard dependency. */
+#if defined(__has_include)
+#  if __has_include("ofLog.h")
+#    include "ofLog.h"
+#    define OFXORTHO_HAS_OFLOG 1
+#  endif
+#endif
+
+#if defined(OFXORTHO_HAS_OFLOG)
+#  define OFXORTHO_WARN(expr) ofLogWarning("ofxOrtho") expr
+#else
+#  include <iostream>
+#  define OFXORTHO_WARN(expr) std::cerr << "[ofxOrtho] " expr << std::endl
+#endif
+
 namespace {
 
 /* Clamp to the dial domain. The kernel clamps too; doing it here keeps the
@@ -20,11 +38,21 @@ double clamp01(double v)
     return v;
 }
 
-/* Scratch buffer for generation calls. Sized generously; the kernel never
- * writes more than the capacity it is handed. */
-const size_t kScratchCap = 4096;
-
 } // namespace
+
+/* The kernel writes what fits and returns the count; it never reports. Telling
+ * the user is the host's job — HOSTS.md section 3 requires it, so that a request
+ * that quietly came back short is visible rather than mysterious. */
+int ofxOrtho::capRequest(int n, const char *what) const
+{
+    if (n > static_cast<int>(kCapacity)) {
+        OFXORTHO_WARN(<< what << ": requested " << n
+                      << ", capacity is " << kCapacity
+                      << " — returning " << kCapacity);
+        return static_cast<int>(kCapacity);
+    }
+    return n;
+}
 
 ofxOrtho::ofxOrtho()
 {
@@ -119,14 +147,14 @@ std::vector<ofxOrtho::Token> ofxOrtho::tokensWithSource(int n, int maxLetters)
     std::vector<Token> out;
     if (!started || n <= 0) return out;
 
-    std::vector<ortho_token> buf(kScratchCap);
-    int wrote = ortho_tokens(&engine, n, maxLetters, buf.data(), buf.size());
+    n = capRequest(n, "tokens");
+    int wrote = ortho_tokens(&engine, n, maxLetters, scratch, kCapacity);
 
     out.reserve(static_cast<size_t>(wrote));
     for (int i = 0; i < wrote; ++i) {
         Token t;
-        t.text   = buf[i].text;
-        t.source = buf[i].source;
+        t.text   = scratch[i].text;
+        t.source = scratch[i].source;
         out.push_back(t);
     }
     return out;
@@ -137,11 +165,11 @@ std::vector<std::string> ofxOrtho::tokens(int n, int maxLetters)
     std::vector<std::string> out;
     if (!started || n <= 0) return out;
 
-    std::vector<ortho_token> buf(kScratchCap);
-    int wrote = ortho_tokens(&engine, n, maxLetters, buf.data(), buf.size());
+    n = capRequest(n, "tokens");
+    int wrote = ortho_tokens(&engine, n, maxLetters, scratch, kCapacity);
 
     out.reserve(static_cast<size_t>(wrote));
-    for (int i = 0; i < wrote; ++i) out.push_back(buf[i].text);
+    for (int i = 0; i < wrote; ++i) out.push_back(scratch[i].text);
     return out;
 }
 
@@ -150,12 +178,12 @@ std::vector<std::string> ofxOrtho::sentence(int numWords, int maxLetters)
     std::vector<std::string> out;
     if (!started || numWords <= 0) return out;
 
-    std::vector<ortho_token> buf(kScratchCap);
+    numWords = capRequest(numWords, "sentence");
     int wrote = ortho_sentence(&engine, numWords, maxLetters,
-                               buf.data(), buf.size());
+                               scratch, kCapacity);
 
     out.reserve(static_cast<size_t>(wrote));
-    for (int i = 0; i < wrote; ++i) out.push_back(buf[i].text);
+    for (int i = 0; i < wrote; ++i) out.push_back(scratch[i].text);
     return out;
 }
 
@@ -165,12 +193,14 @@ std::vector<std::string> ofxOrtho::paragraph(int numSentences, int maxWords,
     std::vector<std::string> out;
     if (!started || numSentences <= 0) return out;
 
-    std::vector<ortho_token> buf(kScratchCap);
     int wrote = ortho_paragraph(&engine, numSentences, maxWords, maxLetters,
-                                buf.data(), buf.size());
+                                scratch, kCapacity);
+    if (wrote == static_cast<int>(kCapacity))
+        OFXORTHO_WARN(<< "paragraph: filled the " << kCapacity
+                      << "-token buffer; output may be truncated");
 
     out.reserve(static_cast<size_t>(wrote));
-    for (int i = 0; i < wrote; ++i) out.push_back(buf[i].text);
+    for (int i = 0; i < wrote; ++i) out.push_back(scratch[i].text);
     return out;
 }
 
@@ -180,15 +210,15 @@ std::vector<ofxOrtho::Token> ofxOrtho::sentenceWithSource(int numWords,
     std::vector<Token> out;
     if (!started || numWords <= 0) return out;
 
-    std::vector<ortho_token> buf(kScratchCap);
+    numWords = capRequest(numWords, "sentence");
     int wrote = ortho_sentence(&engine, numWords, maxLetters,
-                               buf.data(), buf.size());
+                               scratch, kCapacity);
 
     out.reserve(static_cast<size_t>(wrote));
     for (int i = 0; i < wrote; ++i) {
         Token t;
-        t.text   = buf[i].text;
-        t.source = buf[i].source;
+        t.text   = scratch[i].text;
+        t.source = scratch[i].source;
         out.push_back(t);
     }
     return out;
@@ -201,15 +231,17 @@ std::vector<ofxOrtho::Token> ofxOrtho::paragraphWithSource(int numSentences,
     std::vector<Token> out;
     if (!started || numSentences <= 0) return out;
 
-    std::vector<ortho_token> buf(kScratchCap);
     int wrote = ortho_paragraph(&engine, numSentences, maxWords, maxLetters,
-                                buf.data(), buf.size());
+                                scratch, kCapacity);
+    if (wrote == static_cast<int>(kCapacity))
+        OFXORTHO_WARN(<< "paragraph: filled the " << kCapacity
+                      << "-token buffer; output may be truncated");
 
     out.reserve(static_cast<size_t>(wrote));
     for (int i = 0; i < wrote; ++i) {
         Token t;
-        t.text   = buf[i].text;
-        t.source = buf[i].source;
+        t.text   = scratch[i].text;
+        t.source = scratch[i].source;
         out.push_back(t);
     }
     return out;
