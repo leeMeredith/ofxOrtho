@@ -78,6 +78,25 @@ ortho.setPreset(0.3);    // topics stays at 0.9
 
 With all seven at zero the engine reproduces the bare golden vectors exactly.
 
+### Length arguments are ceilings, not targets
+
+`maxLetters` and `maxWords` cap a random draw rather than setting it. Word
+lengths vary below the value, which is deliberate — uniform lengths read as a
+list rather than as prose.
+
+`paragraph()` compounds this. It draws a per-sentence ceiling below your
+`maxWords` and `maxLetters`, then `sentence()` draws each word below *that*. So
+paragraphs come out markedly shorter than `tokens()` at the same settings —
+around two or three letters per word at the default `maxLetters` of 8, short
+enough that different seeds start to resemble one another.
+
+If paragraphs read as too clipped, pass a much larger `maxLetters` — 20 or more
+is reasonable. `tokens()` draws once and shows a language's character most
+clearly.
+
+This is reference behaviour, reproduced faithfully by the kernel. It is not
+covered by the golden vectors, which exercise the token path only.
+
 ### Sections
 
 `newSection()` mints a fresh cast of names, topics, and phrases. Same language,
