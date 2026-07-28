@@ -44,7 +44,12 @@ extern "C" {
 
 /* Substrate table sizes. These are part of the language definition — changing
  * one changes every language on every host. See SPEC.md §4. */
-#define ORTHO_N_VOWEL_DIGRAPHS      36  /* 6 vowels squared */
+/* Upper bound on vowel digraphs. Spec 3.0 builds every ordered pair of
+ * DISTINCT letters from the language's own vowel subset, so the count varies:
+ * 6 vowels give 30, 4 give 12. Use vowel_digraph_count, not this. */
+#define ORTHO_N_VOWEL_DIGRAPHS      30
+#define ORTHO_N_CONSONANTS          20  /* size of the fixed consonant canon */
+#define ORTHO_N_VOWELS               6  /* size of the fixed vowel canon     */
 #define ORTHO_N_CONSONANT_DIGRAPHS  30
 #define ORTHO_N_CONSONANT_TRIGRAPHS 10
 #define ORTHO_N_CONTRACTIONS        20
@@ -143,6 +148,37 @@ typedef struct {
 
     /* source of the most recently resolved token (internal) */
     uint8_t last_source;
+
+    /* ---- spec 3.0: this language's own character -----------------------
+     * Every field below is drawn once at init and immutable thereafter. In
+     * 2.x these did not exist: every seed used all 26 letters uniformly, one
+     * word shape and one punctuation style, so languages differed in
+     * vocabulary and in nothing else. See SPEC.md §4.2 for the draw order,
+     * which is normative — a host drawing these in a different sequence
+     * produces a different language and fails conformance. */
+
+    char   root[8];              /* e.g. "CVCV" — the shape of every word   */
+    int    root_len;
+
+    char   cons_set[ORTHO_N_CONSONANTS + 1];  /* this language's consonants */
+    int    cons_count;                        /* 6..20                      */
+    char   vowel_set[ORTHO_N_VOWELS + 1];     /* this language's vowels     */
+    int    vowel_count;                       /* 4..6                       */
+
+    /* Cumulative weight tables, one entry per letter in the matching set.
+     * Drawn against by wpick(): the first index whose cumulative value
+     * exceeds a fresh next() draw. */
+    double cons_w[ORTHO_N_CONSONANTS];
+    double vowel_w[ORTHO_N_VOWELS];
+
+    int    vowel_digraph_count;  /* how many of vowel_digraphs are in use   */
+
+    char   clause_mark[4];       /* "," ";" ":" or an em dash (UTF-8, 3 by) */
+    char   quote_open[4];        /* '"' or a UTF-8 guillemet                */
+    char   quote_close[4];
+    int    capitalize_quoted;    /* quoted speech opens with a capital      */
+    char   terminals[4];         /* always ".", maybe "?" and/or "!"        */
+    int    compounds;            /* this language joins roots with a hyphen */
 } ortho_t;
 
 /* Initialize an instance: seeds the PRNG and mints the language substrate.

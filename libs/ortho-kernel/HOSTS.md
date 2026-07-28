@@ -187,25 +187,28 @@ adds an eighth dial. A new dial is a spec change, not a host change.
 
 ## 9. Delivery
 
-**Unresolved, and the two hosts currently differ.**
+**Settled: both hosts vendor.**
 
-`ortho-max` vendors the kernel: `source/projects/ortho/ortho-kernel/` holds an
-unmodified copy plus a `KERNEL_VERSION` file naming the upstream commit. A
-plain `git clone` or a GitHub ZIP download builds without further steps.
+`ortho-max` holds an unmodified copy at `source/projects/ortho/ortho-kernel/`
+with a `KERNEL_VERSION` file naming the upstream commit. `ofxOrtho` holds one
+at `libs/ortho-kernel/` with a `VENDORED.md` doing the same. Both build from a
+plain `git clone` or a GitHub ZIP download with no further steps.
 
-`ofxOrtho` consumes the kernel as a submodule at `libs/ortho-kernel`, with a
-`#error` guard that catches the empty-directory case and tells the user to
-clone recursively.
+The reason is acquisition, not preference. GitHub's ZIP downloads exclude
+submodule contents entirely, and an oF addon is normally acquired by dropping a
+folder into `addons/` — so the most common path is exactly the one a submodule
+breaks. A Max package is normally acquired as a release archive, where the
+kernel sources are not present at all and only the built external matters.
+Neither audience should have to know what a submodule is.
 
-The vendoring argument is that GitHub's ZIP downloads exclude submodule
-contents entirely, and oF addons are normally acquired by dropping a folder
-into `addons/` — so the most common acquisition path is exactly the one that
-silently breaks. The submodule argument is a single source of truth.
+The cost is two copies of a frozen library, and it is paid by discipline rather
+than by tooling: edit upstream, re-vendor the whole directory, update the
+provenance file, re-run conformance. Never edit a vendored copy in place.
 
-Whichever way this settles, both hosts should settle the same way. Drift is
-detectable: `diff -r` a vendored copy against upstream, and re-run the
-conformance suite. Drift that changes output fails loudly; drift that does not
-is cosmetic.
+Drift is detectable, which is what makes this safe. `diff -r` a vendored copy
+against upstream proves it is unmodified; the conformance suite proves it still
+speaks the language. Drift that changes output fails loudly, and drift that does
+not is cosmetic.
 
 ---
 

@@ -12,13 +12,17 @@ SRC      = src/ortho.c src/prng.c
 HDRS     = include/ortho.h include/prng.h
 REF     ?= ../ortho
 
-all: build/ortho_oracle
+all: build/ortho_oracle build/ortho_oracle_readable
 
 build/ortho_oracle: tests/oracle.c $(SRC) $(HDRS)
 	@mkdir -p build
 	$(CC) $(CFLAGS) -o $@ tests/oracle.c $(SRC)
 
-test: build/ortho_oracle
+build/ortho_oracle_readable: tests/oracle_readable.c $(SRC) $(HDRS)
+	@mkdir -p build
+	$(CC) $(CFLAGS) -o $@ tests/oracle_readable.c $(SRC)
+
+test: build/ortho_oracle build/ortho_oracle_readable
 	@./tests/conformance.sh $(REF)
 
 clean:

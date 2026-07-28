@@ -13,7 +13,7 @@
 
 set -u
 REF="${1:-../ortho}"
-VEC="$REF/test/vectors/v3"
+VEC="$REF/test/vectors/v4"
 KERNEL="libs/ortho-kernel"
 
 if [ ! -d "$VEC" ]; then
@@ -46,6 +46,11 @@ $CXX -O2 -Wall -Wextra -std=c++11 -I"$KERNEL/include" -Isrc \
 $CXX -o build/ortho_oracle \
      build/oracle.o build/ofxOrtho.o build/ortho.o build/prng.o || exit 2
 
+$CXX -O2 -Wall -Wextra -std=c++11 -I"$KERNEL/include" -Isrc \
+     -c tests/oracle_readable.cpp -o build/oracle_readable.o || exit 2
+$CXX -o build/ortho_oracle_readable \
+     build/oracle_readable.o build/ofxOrtho.o build/ortho.o build/prng.o || exit 2
+
 pass=0; fail=0
 for f in "$VEC"/*.txt; do
   base=$(basename "$f" .txt)
@@ -60,9 +65,28 @@ for f in "$VEC"/*.txt; do
   fi
 done
 
+# Readable path — punctuation, capitalisation, terminal marks. The vectors
+# above exercise tokens only, which is deliberate but has twice let a readable-
+# path bug through. Driven through the wrapper, so a C++ layer that mangled a
+# UTF-8 mark would be caught here.
+RVEC="$REF/test/vectors/v4-readable"
+if [ -d "$RVEC" ]; then
+  for f in "$RVEC"/*.txt; do
+    base=$(basename "$f" .txt)
+    seed=$(echo "$base" | sed 's/seed_\([0-9]*\)_.*/\1/')
+    ./build/ortho_oracle_readable "$seed" 3 12 8 0.5 > build/rout.txt
+    if diff -q "$f" build/rout.txt >/dev/null; then
+      echo "PASS  readable/$base"; pass=$((pass+1))
+    else
+      echo "FAIL  readable/$base"; fail=$((fail+1))
+      diff "$f" build/rout.txt | head -6
+    fi
+  done
+fi
+
 echo
 if [ "$fail" -eq 0 ]; then
-  echo "CONFORMANT — $pass/$pass vectors, spec 2.0, vectors v3"
+  echo "CONFORMANT — $pass/$pass vectors, spec 3.0, vectors v4"
   exit 0
 else
   echo "$fail FAILURE(S) — $pass passed"
