@@ -94,10 +94,19 @@ Every seed draws its own phonology, not just its own vocabulary:
   size so a small inventory does not collapse onto one letter.
 - **Its own clusters.** Consonant digraphs and trigraphs, and vowel digraphs for
   the `CVV` shapes, all drawn from the language's own inventory.
-- **Punctuation.** A clause mark (`,` `;` `:` or an em dash), a quote pair
-  (`"` `«»` `‹›`), whether quoted speech is capitalised, and which terminal
-  marks it uses. The dials decide how often a mark appears; the seed decides
-  which mark it is.
+- **Punctuation.** A clause mark (`,` `;` `:` or an em dash), a quote pair,
+  whether quoted speech is capitalised, and which terminal marks it uses. The
+  dials decide how often a mark appears; the seed decides which mark it is.
+
+  Quote pairs are drawn from `"` `"`, `«` `»`, and `‹` `›`. The last two are
+  guillemets — the standard quotation marks in French, Russian, Spanish and
+  many other languages. A language that quotes with guillemets reads as foreign
+  before you have parsed a word of it, which is the point. If you want ASCII
+  quotes for a particular piece, pick a seed that has them.
+
+  Note that guillemets and the em dash are multibyte UTF-8. `ofDrawBitmapString`
+  is ASCII-only and draws nothing for them while still advancing — use
+  `ofTrueTypeFont` with the full character set, as `example-basic` does.
 - **Compounding and particles.** Some languages join roots with a hyphen; all
   have single-letter function words.
 

@@ -57,6 +57,49 @@ public:
 
     uint32_t getSeed() const { return seed; }
 
+    /* ---- current dial values --------------------------------------------
+     * Read-back matters because setPreset() fills every dial you have not set
+     * by hand: without these you cannot tell what the engine is actually
+     * running, only what you last typed. */
+    double getPhrases()       const { return engine.dials.phrases; }
+    double getFunctionWords() const { return engine.dials.function_words; }
+    double getTopics()        const { return engine.dials.topics; }
+    double getNames()         const { return engine.dials.names; }
+    double getCommas()        const { return engine.dials.commas; }
+    double getQuotation()     const { return engine.dials.quotation; }
+    double getScareQuotes()   const { return engine.dials.scare_quotes; }
+    double getPreset()        const { return preset; }
+
+    /* ---- what makes this language itself (spec 3.0) ---------------------
+     * Read-only views onto the substrate. Useful for labelling output, and
+     * for visual work that wants to respond to a language's character rather
+     * than only to its words: a 6-consonant language and a 20-consonant one
+     * want different treatment on screen. */
+
+    /* Syllable shape every word is built from, e.g. "CVCV" or "CCVC". */
+    std::string getRoot() const { return std::string(engine.root); }
+
+    /* This language's phoneme inventory, in draw order. */
+    std::string getConsonants() const { return std::string(engine.cons_set); }
+    std::string getVowels()     const { return std::string(engine.vowel_set); }
+
+    /* Mark this language uses where English would use a comma: one of
+     * , ; : or an em dash. UTF-8, so not always one byte. */
+    std::string getClauseMark() const { return std::string(engine.clause_mark); }
+
+    /* Quote marks: " " or a guillemet pair. */
+    std::string getQuoteOpen()  const { return std::string(engine.quote_open); }
+    std::string getQuoteClose() const { return std::string(engine.quote_close); }
+
+    /* Whether quoted speech opens with a capital in this language. */
+    bool capitalizesQuoted() const { return engine.capitalize_quoted != 0; }
+
+    /* Terminal marks in use — always ".", sometimes "?" and/or "!". */
+    std::string getTerminals() const { return std::string(engine.terminals); }
+
+    /* Whether this language joins roots into compounds with a hyphen. */
+    bool hasCompounds() const { return engine.compounds != 0; }
+
     /* ---- the seven dials — frozen vocabulary, mirrors the kernel ---------
      * Each takes a double in [0,1]. Calling a setter marks that dial as
      * EXPLICIT, so a later setPreset() will not overwrite it. Call order
