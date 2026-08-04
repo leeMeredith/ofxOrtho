@@ -9,7 +9,7 @@
 
 set -u
 REF="${1:-../ortho}"
-VEC="$REF/test/vectors/v4"
+VEC="$REF/test/vectors/v5"
 
 if [ ! -d "$VEC" ]; then
   echo "error: vectors not found at $VEC"
@@ -43,7 +43,7 @@ done
 # spec 1.x, and English punctuation on every language in the first cut of 3.0.
 # These vectors close it.
 # ---------------------------------------------------------------------------
-RVEC="$REF/test/vectors/v4-readable"
+RVEC="$REF/test/vectors/v5-readable"
 if [ -d "$RVEC" ]; then
   for f in "$RVEC"/*.txt; do
     base=$(basename "$f" .txt)
@@ -60,7 +60,7 @@ fi
 
 echo
 if [ "$fail" -eq 0 ]; then
-  echo "CONFORMANT — $pass/$pass vectors, spec 3.0, vectors v4"
+  echo "CONFORMANT — $pass/$pass vectors, spec 4.0, vectors v5"
   exit 0
 else
   echo "$fail FAILURE(S) — $pass passed"

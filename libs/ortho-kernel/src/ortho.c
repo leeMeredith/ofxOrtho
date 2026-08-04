@@ -235,13 +235,16 @@ static void ortho_run(ortho_t *o, int len, char *out)
     }
     slots[si] = '\0';
 
+    for (i = 0; i <= si && i <= ORTHO_MAX_TOKEN; i++) o->bounds[i] = -1;
+
     out[0] = '\0';
     i = 0;
     while (i < si) {
+        o->bounds[i] = (int)strlen(out);
         if (slots[i] == 'V') {
             int vk = 0;
             while (i + vk < si && slots[i + vk] == 'V') vk++;
-            if (vk >= 2 && o->vowel_digraph_count > 0) {
+            if (vk >= 2 && o->vowel_digraph_count > 0 && !o->no_clusters) {
                 str_append(out, o->vowel_digraphs[
                     ortho_prng_below(r, o->vowel_digraph_count)]);
                 i += 2;
@@ -261,11 +264,11 @@ static void ortho_run(ortho_t *o, int len, char *out)
         }
         k = 0;
         while (i + k < si && slots[i + k] == 'C') k++;
-        if (k >= 3) {
+        if (k >= 3 && !o->no_clusters) {
             str_append(out, o->consonant_trigraphs[
                 ortho_prng_below(r, ORTHO_N_CONSONANT_TRIGRAPHS)]);
             i += 3;
-        } else if (k >= 2) {
+        } else if (k >= 2 && !o->no_clusters) {
             str_append(out, o->consonant_digraphs[
                 ortho_prng_below(r, ORTHO_N_CONSONANT_DIGRAPHS)]);
             i += 2;
@@ -278,6 +281,39 @@ static void ortho_run(ortho_t *o, int len, char *out)
             i++;
         }
     }
+    o->bounds[si] = (int)strlen(out);
+}
+
+/* One eroded function word (SPEC §5.7). Builds a full root, then truncates at
+ * a recorded slot boundary. `cut` is the word's index; the pattern skews short.
+ * `no_clusters` is the CVV gate — a cut-ENABLING rule, not an erosion rule. */
+static void ortho_word_cut(ortho_t *o, int cut, int no_clusters, char *out)
+{
+    static const int PAT[6] = { 0, 0, 0, 1, 1, 2 };
+    int legal[ORTHO_MAX_TOKEN + 1];
+    int nlegal = 0, k, pat, at;
+    const char *R = o->root;
+    int L = o->root_len;
+
+    o->no_clusters = no_clusters;
+    ortho_run(o, L, out);
+    o->no_clusters = 0;
+
+    for (k = 2; k <= L; k++) {
+        if (k < L) {
+            char last = R[k - 1], prev = R[k - 2];
+            if (!(last == 'V' || (last == 'C' && prev == 'V'))) continue;
+        }
+        if (o->bounds[k] >= 0) legal[nlegal++] = o->bounds[k];
+    }
+
+    if (nlegal == 0) { cluster_guard(out); return; }
+
+    pat = PAT[cut % 6];
+    if (pat > nlegal - 1) pat = nlegal - 1;
+    at = legal[pat];
+    out[at] = '\0';
+    cluster_guard(out);
 }
 
 int ortho_word(ortho_t *o, int num_letters, int allow_contractions, char *out)
@@ -481,15 +517,30 @@ static void build_substrate(ortho_t *o)
         }
     }
 
-    /* 14. function words (SPEC §5.4). The size counter starts at ONE, which
-     * is what gives a language its particles. */
+    /* 14. function words (SPEC §5.4). Four particles, then sixteen eroded
+     * roots (SPEC §5.7). Particles are NOT derived from erosion: only VCVC
+     * can erode to a single letter, so erosion-derived particles would be
+     * impossible in most languages. */
     {
-        int size = 1, count = 0;
-        int step = ORTHO_N_FUNCTION_WORDS / 4;
-        for (k = 0; k < ORTHO_N_FUNCTION_WORDS; k++) {
-            count++;
-            if (count == step) { size++; count = 0; }
-            ortho_word(o, size, 0, o->function_words[k]);
+        const int particles = 4;
+        int no_cl = (strcmp(o->root, "CVV") == 0);
+        for (k = 0; k < particles; k++) {
+            ortho_word(o, 1, 0, o->function_words[k]);
+        }
+        for (k = particles; k < ORTHO_N_FUNCTION_WORDS; k++) {
+            int j, dup = 0;
+            ortho_word_cut(o, k - particles, no_cl, o->function_words[k]);
+            /* Redraw ONCE against the whole table; if it collides again, keep
+             * it. A fixed cap, never a loop: a small inventory would spin.
+             * These retry points must match the reference exactly or the
+             * streams diverge from here on. */
+            for (j = 0; j < k; j++) {
+                if (strcmp(o->function_words[j], o->function_words[k]) == 0) {
+                    dup = 1;
+                    break;
+                }
+            }
+            if (dup) ortho_word_cut(o, k - particles, no_cl, o->function_words[k]);
         }
     }
 }

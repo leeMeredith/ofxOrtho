@@ -13,7 +13,7 @@
 
 set -u
 REF="${1:-../ortho}"
-VEC="$REF/test/vectors/v4"
+VEC="$REF/test/vectors/v5"
 KERNEL="libs/ortho-kernel"
 
 if [ ! -d "$VEC" ]; then
@@ -69,7 +69,7 @@ done
 # above exercise tokens only, which is deliberate but has twice let a readable-
 # path bug through. Driven through the wrapper, so a C++ layer that mangled a
 # UTF-8 mark would be caught here.
-RVEC="$REF/test/vectors/v4-readable"
+RVEC="$REF/test/vectors/v5-readable"
 if [ -d "$RVEC" ]; then
   for f in "$RVEC"/*.txt; do
     base=$(basename "$f" .txt)
@@ -86,7 +86,7 @@ fi
 
 echo
 if [ "$fail" -eq 0 ]; then
-  echo "CONFORMANT — $pass/$pass vectors, spec 3.0, vectors v4"
+  echo "CONFORMANT — $pass/$pass vectors, spec 4.0, vectors v5"
   exit 0
 else
   echo "$fail FAILURE(S) — $pass passed"

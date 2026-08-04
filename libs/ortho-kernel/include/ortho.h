@@ -149,6 +149,16 @@ typedef struct {
     /* source of the most recently resolved token (internal) */
     uint8_t last_source;
 
+    /* CVV gate (SPEC §5.7, internal): suppress cluster tables while building
+     * function words so the slot-2 boundary survives. Set and cleared around
+     * a single run; never observable from outside. */
+    int no_clusters;
+
+    /* Slot-boundary offsets from the most recent run (SPEC §5.7, internal).
+     * -1 means a cluster filled that slot as part of a multi-slot unit.
+     * Per-instance so the kernel stays reentrant across instances. */
+    int bounds[ORTHO_MAX_TOKEN + 1];
+
     /* ---- spec 3.0: this language's own character -----------------------
      * Every field below is drawn once at init and immutable thereafter. In
      * 2.x these did not exist: every seed used all 26 letters uniformly, one
